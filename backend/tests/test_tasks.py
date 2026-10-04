@@ -60,9 +60,18 @@ def test_overdue_filter(client):
     client.post("/tasks", json={"title": "future", "due_date": tomorrow})
     client.post("/tasks", json={"title": "today", "due_date": today.isoformat()})
     client.post("/tasks", json={"title": "no_due"})
-    client.post("/tasks", json={"title": "old_done", "due_date": yesterday, "is_done": True})
+
+    done = client.post("/tasks", json={"title": "old_done", "due_date": yesterday})
+    client.patch(f"/tasks/{done.json()['id']}/complete")
 
     response = client.get("/tasks?overdue=true")
     titles = {t["title"] for t in response.json()}
     assert titles == {"old"}
 
+def test_update_task(client):
+    created = client.post("/tasks", json={"title": "test", "due_date": date.today().isoformat(), "is_daily": True})
+    task_id = created.json()["id"]
+    response = client.patch(f"/tasks/{task_id}", json={"title": "test", "due_date": None, "is_daily": False})
+    assert response.status_code == 200, response.json()
+    assert response.json()["title"] == "test"
+    assert response.json()["due_date"] is None

@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import FastAPI, HTTPException, status, Depends
 from sqlmodel import Session, select
 
-from app.schemas import TaskCreate, TaskRead
+from app.schemas import TaskCreate, TaskRead, TaskUpdate
 from app.database import create_db, get_session
 from app.models import Task
 
@@ -74,5 +74,17 @@ def delete_task(task_id: int, session: Session = Depends(get_session)):
     task = find_task(task_id, session)
     session.delete(task)
     session.commit()
+
+@app.patch("/tasks/{task_id}")
+def update_task(task_id: int, data: TaskUpdate, session: Session = Depends(get_session)):
+    task = find_task(task_id, session)
+    changes = data.model_dump(exclude_unset=True)
+    for key, value in changes.items():
+        setattr(task, key, value)
+
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    return to_read(task, date.today())
 
 

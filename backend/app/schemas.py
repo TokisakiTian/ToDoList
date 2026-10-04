@@ -14,4 +14,9 @@ class TaskCreate(BaseModel):
     description: str | None = None
     due_date: date | None = None
     is_daily: bool = False
-    is_done: bool = False
+
+class TaskUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    due_date: date | None = None
+    is_daily: bool | None = None
